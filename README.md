@@ -147,7 +147,3 @@ This assignment demonstrates and exercises the following concepts:
 Working on this project clarified how orchestration separates control logic from specialized behavior. Instead of hardcoding workflows, the orchestrator inspects an ordered registry and composes an active pipeline. That makes the system easy to extend (add a new agent file and register it) and simple to reason about. The right-hand Workflow Trace proved invaluable when teaching — students can see each step and understand how information flows between agents.
 
 The exercise reinforced the importance of separation of concerns: agents keep their prompts and logic localized, `api.js` centralizes communication with the LLM endpoint, `orchestrator.js` handles control flow, and `app.js` manages the UI. Removing hardcoded secrets and requiring runtime configuration is a practical safety step for public demos.
-
----
-
-If you want, I can add a short development section with a `.gitignore` recommendation and an example `config.example.js` file to make local testing simpler and safer.
