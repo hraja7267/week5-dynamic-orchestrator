@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Admin Copilot</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="dashboard-shell">
+    <header class="dashboard-header">
+      <h1>Life Admin Copilot</h1>
+      <p>Your everyday planning team, controlled by an AI orchestrator.</p>
+    </header>
+
+    <section class="dashboard-top-input" aria-labelledby="top-input-heading">
+      <div class="top-input-content">
+        <label for="situation-input" id="top-input-heading">Describe your situation</label>
+        <textarea id="situation-input" rows="6" placeholder="I have school tomorrow, soccer at 5, a science test Friday, and I need to clean my room."></textarea>
+      </div>
+      <div class="top-input-actions">
+        <button id="run-agents-button" type="button">Run Agents</button>
+        <button id="try-example-button" type="button">Try Example</button>
+      </div>
+    </section>
+
+    <section class="dashboard-grid">
+      <aside class="dashboard-column dashboard-column-left" aria-labelledby="agent-controls-heading">
+        <div class="column-header">
+          <h2 id="agent-controls-heading">🎛️ Agent Control Center</h2>
+        </div>
+
+        <div class="agent-card">
+          <div>
+            <h3>Planner Agent</h3>
+            <p>Turns your situation into a realistic plan.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="planner-toggle" checked>
+            <span class="slider"></span>
+            <span class="visually-hidden">Planner Agent toggle</span>
+          </label>
+        </div>
+
+        <div class="agent-card">
+          <div>
+            <h3>Time Agent</h3>
+            <p>Organizes tasks and checks timing.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="time-toggle" checked>
+            <span class="slider"></span>
+            <span class="visually-hidden">Time Agent toggle</span>
+          </label>
+        </div>
+
+        <div class="agent-card">
+          <div>
+            <h3>Priority Agent</h3>
+            <p>Figures out what should happen first.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="priority-toggle" checked>
+            <span class="slider"></span>
+            <span class="visually-hidden">Priority Agent toggle</span>
+          </label>
+        </div>
+
+        <div class="agent-card">
+          <div>
+            <h3>Checklist Agent</h3>
+            <p>Turns the plan into actionable checklist items.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="checklist-toggle" checked>
+            <span class="slider"></span>
+            <span class="visually-hidden">Checklist Agent toggle</span>
+          </label>
+        </div>
+      </aside>
+
+      <section class="dashboard-column dashboard-column-middle" aria-labelledby="agent-results-heading">
+        <div class="column-header">
+          <h2 id="agent-results-heading">🧾 Agent Results</h2>
+        </div>
+
+        <div class="result-card" id="planner-result-card">
+          <h3>Planner Agent</h3>
+          <div class="result-output" id="planner-result"></div>
+        </div>
+
+        <div class="result-card" id="time-result-card">
+          <h3>Time Agent</h3>
+          <div class="result-output" id="time-result"></div>
+        </div>
+
+        <div class="result-card" id="priority-result-card">
+          <h3>Priority Agent</h3>
+          <div class="result-output" id="priority-result"></div>
+        </div>
+
+        <div class="result-card" id="checklist-result-card">
+          <h3>Checklist Agent</h3>
+          <div class="result-output" id="checklist-result"></div>
+        </div>
+      </section>
+
+      <section class="dashboard-column dashboard-column-right" aria-labelledby="workflow-trace-heading">
+        <div class="column-header">
+          <h2 id="workflow-trace-heading">🎬 Orchestrator Trace</h2>
+        </div>
+
+        <div class="trace-panel workflow-log" id="workflow-trace" aria-live="polite"></div>
+        <div class="trace-actions">
+          <button id="clear-results-button" type="button">Clear Results</button>
+          <button id="reset-button" type="button">Reset</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
