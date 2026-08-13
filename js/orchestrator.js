@@ -51,34 +51,39 @@ export async function runOrchestrator({
   safeTrace('Orchestrator started');
 
   try {
-    // Build the pipeline by filtering the ordered registry based on enabledAgents
     const pipeline = [];
     for (const agent of agentRegistry) {
       const isEnabled = enabledAgents?.[agent.id] ?? false;
       if (!isEnabled) {
-        safeTrace(`${agent.name} is OFF — skipped`);
+        safeTrace(`${agent.name} skipped`);
       } else {
-        safeTrace(`${agent.name} is ON`);
         pipeline.push(agent);
       }
     }
 
-    // Execute the filtered pipeline sequentially
     for (const agent of pipeline) {
       safeAgentStart(agent.id);
       safeTrace(`${agent.name} started`);
 
-      const inputArgs = previousOutput === null
-        ? [userMessage]
-        : [userMessage, previousOutput];
+      try {
+        const inputArgs = previousOutput === null
+          ? [userMessage]
+          : [userMessage, previousOutput];
 
-      const output = await agent.run(...inputArgs);
+        const output = await agent.run(...inputArgs);
 
-      results[agent.id] = output;
-      previousOutput = output;
+        results[agent.id] = output;
+        previousOutput = output;
 
-      safeAgentComplete(agent.id, output);
-      safeTrace(`${agent.name} completed`);
+        safeAgentComplete(agent.id, output);
+        safeTrace(`${agent.name} completed`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        results[agent.id] = { error: message };
+        safeTrace(`${agent.name} failed`);
+        safeError(error);
+        break;
+      }
     }
 
     safeTrace('Orchestrator finished');

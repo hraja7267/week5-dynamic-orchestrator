@@ -24,7 +24,7 @@ export async function callAI(prompt) {
 
   try {
     if (!apiKey) {
-      throw new Error('AI service is not configured. Please configure the class API credential before running the agents.');
+      throw new Error('AI service is not configured.');
     }
 
     const response = await fetch(endpoint, {

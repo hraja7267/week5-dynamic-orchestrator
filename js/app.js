@@ -44,6 +44,7 @@ const enabledAgents = {
 let currentAgentKey = null;
 const buttonText = runButton.textContent;
 let traceStep = 0;
+let isWorkflowRunning = false;
 
 function setAgentCardVisual(agentKey, state) {
   const config = agentConfig[agentKey];
@@ -137,37 +138,29 @@ function createTraceItem(message, isError = false) {
   const contentEl = document.createElement('div');
   contentEl.className = 'trace-content';
 
-  // simple parser to turn trace strings into an educational timeline entry
   let titleText = message;
   let subText = '';
-  let emoji = '';
 
   if (/Orchestrator/i.test(message)) {
-    emoji = '🎬';
     titleText = 'Orchestrator';
-    if (/started/i.test(message)) subText = 'Workflow started';
-    else if (/finished/i.test(message)) subText = 'Workflow finished';
-    else subText = message;
-  } else if (/Agent/i.test(message)) {
-    const m = message.match(/^(.*?) Agent/i);
-    const label = m ? `${m[1]} Agent` : 'Agent';
-    const key = m ? m[1].split(' ')[0].toLowerCase() : '';
-    const icons = { planner: '🤖', time: '⏰', priority: '🎯', checklist: '✅' };
-    emoji = icons[key] || '🤖';
-    titleText = `${emoji} ${label}`;
-
     if (/started/i.test(message)) subText = 'Started';
-    else if (/completed/i.test(message)) subText = 'Completed';
-    else if (/OFF/i.test(message) && /skipped/i.test(message)) subText = 'Skipped because it is OFF';
-    else if (/is ON/i.test(message)) subText = 'Enabled';
-    else subText = message.replace(new RegExp(`${label}\s*`,'i'), '').trim();
+    else if (/finished/i.test(message)) subText = 'Finished';
+    else subText = 'Status';
+  } else if (/Agent/i.test(message)) {
+    const match = message.match(/^(.*?)(?:\s+Agent)?\s+(started|completed|failed|skipped)$/i);
+    if (match) {
+      titleText = match[1].trim() ? `${match[1].trim()} Agent` : 'Agent';
+      subText = match[2].charAt(0).toUpperCase() + match[2].slice(1).toLowerCase();
+    } else {
+      const agentLabel = message.replace(/\s+(started|completed|failed|skipped)$/i, '').trim();
+      titleText = agentLabel || 'Agent';
+      subText = message.replace(agentLabel, '').trim() || 'Status';
+    }
   } else if (/^Error:/i.test(message)) {
-    emoji = '⚠️';
-    titleText = `${emoji} Error`;
+    titleText = 'Error';
     subText = message.replace(/^Error:\s*/i, '');
     item.classList.add('error');
   } else {
-    // fallback — show raw message
     titleText = message;
   }
 
@@ -209,25 +202,25 @@ function initializeToggles() {
 }
 
 async function handleRun() {
+  if (isWorkflowRunning) return;
+
   const userMessage = situationInput.value.trim();
   if (!userMessage) {
     createTraceItem('Please enter your situation before running agents.', true);
     return;
   }
 
+  isWorkflowRunning = true;
+  setButtonLoading(true);
   clearResults();
-  // If no agents are enabled, show message and stop without calling the API
+
   const anyEnabled = Object.values(enabledAgents).some(Boolean);
   if (!anyEnabled) {
     createTraceItem('No agents are currently ON. Turn on at least one agent to run the workflow.', true);
-    createTraceItem('Workflow stopped: no agents enabled.');
-    // Ensure the Run button remains enabled
+    isWorkflowRunning = false;
     setButtonLoading(false);
     return;
   }
-
-  setButtonLoading(true);
-  createTraceItem('Starting orchestrator...');
 
   const orchestratorPayload = {
     userMessage,
@@ -235,26 +228,24 @@ async function handleRun() {
     onAgentStart(agentName) {
       currentAgentKey = agentName;
       setAgentCardVisual(agentName, 'running');
-      createTraceItem(`${agentName.replace(/^[a-z]/, (c) => c.toUpperCase())} Agent started`);
     },
     onAgentComplete(agentName, output) {
+      currentAgentKey = null;
       const config = agentConfig[agentName];
       if (config) {
         config.resultOutput.textContent = output || '';
         setAgentCardVisual(agentName, 'complete');
       }
-      createTraceItem(`${agentName.replace(/^[a-z]/, (c) => c.toUpperCase())} Agent completed`);
     },
     onTrace(message) {
       createTraceItem(message);
     },
     onError(error) {
       const message = error instanceof Error ? error.message : String(error);
-      const friendlyMessage = /AI service is not configured|API key not configured/i.test(message)
-        ? 'AI service is not configured. Please configure the class API credential before running the agents.'
-        : 'AI request failed. Please check the API configuration and try again.';
+      const friendlyMessage = /AI service is not configured/i.test(message)
+        ? 'AI service is not configured.'
+        : 'AI request failed.';
 
-      createTraceItem(`Error: ${friendlyMessage}`, true);
       if (currentAgentKey) {
         setAgentCardVisual(currentAgentKey, 'error');
         const config = agentConfig[currentAgentKey];
@@ -266,13 +257,13 @@ async function handleRun() {
     },
   };
 
-  const { trace } = await runOrchestrator(orchestratorPayload);
-
-  trace.forEach((message) => {
-    // already rendered through onTrace and onAgent callbacks
-  });
-
-  setButtonLoading(false);
+  try {
+    await runOrchestrator(orchestratorPayload);
+  } finally {
+    currentAgentKey = null;
+    isWorkflowRunning = false;
+    setButtonLoading(false);
+  }
 }
 
 function initializeApp() {
