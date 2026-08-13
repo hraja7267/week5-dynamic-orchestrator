@@ -86,25 +86,40 @@ These different configurations show how the orchestrator adapts the pipeline wit
 
 ## API
 
-This project communicates with the course-provided LLM endpoint. The repository does not include any API authorization tokens. To run the app you must configure an API key at runtime.
+This project communicates with the course-provided LLM endpoint and the model is already configured in [js/api.js](js/api.js). The repo does not include any secret API token. The application requires a valid credential at runtime so the browser can send the authorization header required by the course proxy.
 
-Do NOT commit your API token to the repository or publish it in public forks.
+Why the credential is required:
+- The request goes to the course proxy at https://vibe-proxy-gqv4.onrender.com/v1/chat/completions
+- The model is class-chat-model
+- The request includes an Authorization Bearer credential
 
-To configure the key locally for testing, create a file named `config.js` (not checked in) with the following content and include it in `index.html` before the main module script, for example:
+Why it must not be committed to GitHub:
+- A browser-side API token is exposed to anyone who can inspect the page source or network requests
+- Public GitHub Pages repositories cannot keep a secret private in the browser
+- Committing a real key would leak credentials to the public internet
+
+Local testing:
+- Copy [config.example.js](config.example.js) to a local file named `config.js`
+- Put your real credential in that local file only
+- Keep `config.js` uncommitted in the repository root
+- The project includes `config.js` in [.gitignore](.gitignore) so it is not tracked by Git
 
 ```html
-<!-- Example: config.js should be gitignored and NOT pushed with your token -->
-<script>
-	// DO NOT commit this file. Replace with your key in local testing only.
-	window.VIBE_API_KEY = 'YOUR_API_KEY_HERE';
-	// Optional: override endpoint
-	// window.VIBE_API_ENDPOINT = 'https://your-proxy.example.com/v1/chat/completions';
-</script>
-<!-- then the module script -->
+<script src="config.js"></script>
 <script type="module" src="js/app.js"></script>
 ```
 
-If you prefer a secure approach for public GitHub Pages, host a small server-side proxy that injects the token server-side and call that HTTPS endpoint from the client.
+Example local file content:
+
+```js
+window.VIBE_API_KEY = 'PASTE_YOUR_COURSE_API_KEY_HERE';
+```
+
+The endpoint and model are already defined in [js/api.js](js/api.js). The app will show a clear configuration error if the runtime credential is missing.
+
+Public GitHub Pages note:
+- GitHub Pages is a static frontend only, so it cannot safely store a browser-secret in a public repository or client-side JavaScript
+- If a real credential is not available in a secure server-side environment, the app should remain functional and show the configuration error instead of exposing a secret
 
 ## How to Run
 
