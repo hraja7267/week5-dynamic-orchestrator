@@ -250,12 +250,16 @@ async function handleRun() {
     },
     onError(error) {
       const message = error instanceof Error ? error.message : String(error);
-      createTraceItem(`Error: ${message}`, true);
+      const friendlyMessage = /AI service is not configured|API key not configured/i.test(message)
+        ? 'AI service is not configured. Please configure the class API credential before running the agents.'
+        : 'AI request failed. Please check the API configuration and try again.';
+
+      createTraceItem(`Error: ${friendlyMessage}`, true);
       if (currentAgentKey) {
         setAgentCardVisual(currentAgentKey, 'error');
         const config = agentConfig[currentAgentKey];
         if (config) {
-          config.resultOutput.textContent = `Error: ${message}`;
+          config.resultOutput.textContent = friendlyMessage;
           config.resultCard.classList.add('error');
         }
       }

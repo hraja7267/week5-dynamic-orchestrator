@@ -18,12 +18,13 @@ export async function callAI(prompt) {
   };
 
   const headers = { 'Content-Type': 'application/json' };
-  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
 
   try {
     if (!apiKey) {
-      // Avoid embedding secrets in the client; require configuration.
-      throw new Error('API key not configured. Set window.VIBE_API_KEY before calling callAI.');
+      throw new Error('AI service is not configured. Please configure the class API credential before running the agents.');
     }
 
     const response = await fetch(endpoint, {
@@ -32,23 +33,27 @@ export async function callAI(prompt) {
       body: JSON.stringify(payload),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      const errorMessage = data?.error?.message || data?.message || response.statusText;
-      throw new Error(`AI API request failed: ${errorMessage}`);
+      throw new Error('AI request failed. Please check the API configuration and try again.');
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error('AI request failed. Please check the API configuration and try again.');
     }
 
     const assistantContent = data?.choices?.[0]?.message?.content;
     if (typeof assistantContent !== 'string') {
-      throw new Error('AI API response did not contain assistant content.');
+      throw new Error('AI request failed. Please check the API configuration and try again.');
     }
 
     return assistantContent.trim();
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`callAI failed: ${error.message}`);
+      throw new Error(error.message);
     }
-    throw new Error('callAI failed with an unknown error.');
+    throw new Error('AI request failed. Please check the API configuration and try again.');
   }
 }
